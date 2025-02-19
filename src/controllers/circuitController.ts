@@ -4,7 +4,6 @@ import { Circuit } from "../models/circuitModels";
 export const getAllCircuit = async (req: Request, res: Response) => {
     try {
         const { circuit } = req.query;
-        console.log(circuit);
         if (!circuit) {
             const place = await Circuit.find();
             res.status(200).json(place);

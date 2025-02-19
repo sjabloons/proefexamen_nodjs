@@ -5,12 +5,11 @@ import { Driver } from "../models/driverModel";
 export const getAllRaces = async (req: Request, res: Response) => {
     try {
         const { format } = req.query;
-        const shouldFormat = format === "true"; // Enkel formatteren als format=true
+        const shouldFormat = format === "true";
 
         const races = await Race.find().lean();
         const drivers = await Driver.find().lean();
 
-        // Maak een snelle lookup map voor drivers
         const driverMap = new Map(
             drivers.map((driver) => [
                 driver.driver_id,
@@ -21,7 +20,6 @@ export const getAllRaces = async (req: Request, res: Response) => {
             ])
         );
 
-        // Functie om tijd van P1 om te zetten naar "1:31:44.742"
         const formatTimeForFirstPosition = (milliseconds: number) => {
             const hours = Math.floor(milliseconds / 3600000);
             const minutes = Math.floor((milliseconds % 3600000) / 60000);
@@ -31,21 +29,18 @@ export const getAllRaces = async (req: Request, res: Response) => {
                 .padStart(2, "0")}:${seconds.padStart(6, "0")}`;
         };
 
-        // Functie om tijd van P2 & P3 om te zetten naar "22.457"
         const formatTimeForOtherPositions = (milliseconds: number) =>
             (milliseconds / 1000).toFixed(3);
-
-        // Verrijk race_results met coureur-details en vlag-URL
         const enrichedRaces = races.map((race) => ({
             ...race,
             race_results: race.race_results.map((result, index) => ({
                 ...result,
                 time: shouldFormat
                     ? index === 0
-                        ? formatTimeForFirstPosition(result.time) // P1: uren:minuten:seconden.milliseconden
-                        : formatTimeForOtherPositions(result.time) // P2+P3: seconden.milliseconden
-                    : result.time, // Geen format query → originele tijd behouden
-                driver: driverMap.get(result.driver_id) || null, // Voeg coureur-details toe
+                        ? formatTimeForFirstPosition(result.time)
+                        : formatTimeForOtherPositions(result.time)
+                    : result.time,
+                driver: driverMap.get(result.driver_id) || null,
             })),
         }));
 
